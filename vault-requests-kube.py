@@ -30,7 +30,7 @@ if secrets_type.lower() == 'file':
 if secrets_type.lower() == 'variables':
     env_mode = True
 
-if vault_skip_ssl != '':
+if vault_skip_ssl not in ('',None):
     certspath = False
     logging.info("Skipping SSL while connecting to Vault")
 else:
