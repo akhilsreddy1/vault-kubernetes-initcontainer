@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-apptest
+spec:
+  initContainers:
+  - name: vault-init-container
+    image: vault-init:latest
+    imagePullPolicy: Always
+    # Environment variables needed for vault authentication injected from secret.   
+    envFrom:
+    - secretRef:
+        name: vault-properties  
+    volumeMounts:
+      # path to store the secrets after fetched from vault
+    - name: data
+      mountPath: /opt/conf
+  containers:
+    # Application Container 1 
+  - name: app1
+    image: busybox
+    command: ["/bin/sh","-c","set -a;source /opt/conf/config;env;sleep 3600"]
+   # command: ["/bin/sh","-c","set -a;source /opt/conf/config;env;./app_startup.sh"]
+    volumeMounts:
+    # App sources secret file from the same Volume which is mounted by Init container above
+    - name: data
+      mountPath: /opt/conf
+  volumes:
+  - name: data
+    emptyDir: {}
