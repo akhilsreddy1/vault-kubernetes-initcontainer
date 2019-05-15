@@ -44,7 +44,7 @@ def get_kubernetes_token():
     except IOError:
         logging.exception(
             'Default Service account token file not found in Pod')
-        raise SystemExit(1)
+        raise SystemExit(1) 
 
 
 def get_client_token():
@@ -74,7 +74,7 @@ def get_client_token():
         return client_token
     else:
         logging.error(
-            f'Invalid API request while authenticating with Vault {vault_url} . Status Code : {response.status_code} Response : {response.reason} {response.json()}')
+            f'Invalid API request while authenticating with Vault. Status Code : {response.status_code} Response : {response.reason} {response.json()}')
         raise SystemExit(1)
 
 
@@ -122,7 +122,7 @@ def get_secret_vault(client_token):
             raise SystemExit(1)
     else:
         logging.error(
-            f"Invalid API request while getting secrets from Vault {vault_url} . Status Code : {response.status_code} Response : {response.reason} {response.json()}")
+            f"Invalid API request while getting secrets from Vault. Status Code : {response.status_code} Response : {response.reason} {response.json()}")
         raise SystemExit(1)
 
 
