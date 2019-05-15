@@ -22,7 +22,7 @@ logging.basicConfig(
 
 if any(v in (None, '') for v in[vault_url, vault_role, secret_kv_path, secret_target_path, secret_target_file, secrets_type]):
     logging.error("Environment Variables not passed incorrectly")
-    raise SystemExit
+    raise SystemExit(1)
 
 if vault_skip_ssl in ('', None):
     certspath = False
@@ -44,7 +44,7 @@ def get_kubernetes_token():
     except IOError:
         logging.exception(
             'Default Service account token file not found in Pod')
-        raise SystemExit
+        raise SystemExit(1)
 
 
 def get_client_token():
@@ -62,11 +62,11 @@ def get_client_token():
     except requests.ConnectionError as err:
         logging.exception(
             f'Connectivity Error for Vault URL {vault_url} :: {err}')
-        raise SystemExit
+        raise SystemExit(1)
     except Exception as err:
         logging.exception(
             f'Could not get a Client Token while authenticating with Vault :: {err}')
-        raise SystemExit
+        raise SystemExit(1)
 
     if response.status_code == requests.codes.ok:
         client_token = json.loads(response.content)['auth']['client_token']
@@ -74,8 +74,8 @@ def get_client_token():
         return client_token
     else:
         logging.error(
-            f'Invalid API request while authenticating with Vault. Status Code : {response.status_code} Response : {response.reason} {response.json()}')
-        raise SystemExit
+            f'Invalid API request while authenticating with Vault {vault_url} . Status Code : {response.status_code} Response : {response.reason} {response.json()}')
+        raise SystemExit(1)
 
 
 def get_secret_vault(client_token):
@@ -91,11 +91,11 @@ def get_secret_vault(client_token):
 
     except requests.ConnectionError:
         logging.exception(f'Connectivity Error for Vault URL {vault_url}')
-        raise SystemExit
+        raise SystemExit(1)
     except Exception as err:
         logging.exception(
             f'Could not retrieve secrets from Vault. Exception :: {err}')
-        raise SystemExit
+        raise SystemExit(1)
 
     if response.status_code == requests.codes.ok:
 
@@ -116,14 +116,14 @@ def get_secret_vault(client_token):
                     f'Secret Variables written to : {secret_target_path}/{secret_target_file}')
         except IOError:
             logging.exception(f'Secrets target path/file not found,or unable to open,Exiting')
-            raise SystemExit
+            raise SystemExit(1)
         except Exception as err:
             logging.exception(f'Error Writing Secrets :: {err}')
-            raise SystemExit
+            raise SystemExit(1)
     else:
         logging.error(
-            f"Invalid API request while getting secrets from Vault. Status Code : {response.status_code} Response : {response.reason} {response.json()}")
-        raise SystemExit
+            f"Invalid API request while getting secrets from Vault {vault_url} . Status Code : {response.status_code} Response : {response.reason} {response.json()}")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
