@@ -10,6 +10,7 @@ warnings.filterwarnings("ignore")
 vault_role = os.environ.get('VAULT_ROLE')
 vault_url = os.environ.get('VAULT_URL')
 vault_skip_ssl = os.environ.get('VAULT_SKIP_VERIFY')
+vault_k8s_endpoint = os.environ.get('VAULT_K8S_ENDPOINT')
 secret_kv_path = os.environ.get('VAULT_SECRET_PATH')
 secret_target_path = os.environ.get('SECRET_TARGET_PATH')
 secret_target_file = os.environ.get('SECRET_TARGET_FILE')
@@ -24,18 +25,21 @@ if any(v in (None, '') for v in[vault_url, vault_role, secret_kv_path, secret_ta
     logging.error("Environment Variables not passed incorrectly")
     raise SystemExit(1)
 
-if vault_skip_ssl in ('', None):
+if vault_skip_ssl in (None, False):
     certspath = False
     logging.info("Skipping SSL while connecting to Vault")
 else:
     certspath = '/etc/tls/ca.crt'
+
+if vault_k8s_endpoint in ('', None):
+    vault_k8s_endpoint = 'kubernetes'
 
 file_mode = True if secrets_type.lower() == 'file' else False
 env_mode = True if secrets_type.lower() == 'variables' else False
 
 
 def get_kubernetes_token():
-    
+
     logging.info("Getting POD Default service account token")
 
     try:
@@ -44,17 +48,17 @@ def get_kubernetes_token():
     except IOError:
         logging.exception(
             'Default Service account token file not found in Pod')
-        raise SystemExit(1) 
+        raise SystemExit(1)
 
 
 def get_client_token():
-    
+
     try:
         payload = {"jwt": get_kubernetes_token(), "role": vault_role}
 
-        logging.info("Getting Vault client token")
+        logging.info("Getting Vault client token using k8s-auth-method ")
         response = requests.post(
-            url=vault_url + '/v1/auth/kubernetes/login',
+            url=vault_url + '/v1/auth/'+vault_k8s_endpoint+'/login',
             data=json.dumps(payload),
             timeout=(25, 25),
             verify=certspath)
@@ -79,7 +83,7 @@ def get_client_token():
 
 
 def get_secret_vault(client_token):
-    
+
     logging.info('Getting Secrets from Vault')
 
     try:
@@ -105,7 +109,7 @@ def get_secret_vault(client_token):
                     f1.write(json.loads(response.content)
                              ['data'][secret_target_file])
                 logging.info(
-                    f'Secret File written to : {secret_target_path}/{secret_target_file}')
+                    f'Secrets File written to : {secret_target_path}/{secret_target_file}')
 
             if env_mode:
                 secrets = json.loads(response.content)['data']
@@ -115,7 +119,8 @@ def get_secret_vault(client_token):
                 logging.info(
                     f'Secret Variables written to : {secret_target_path}/{secret_target_file}')
         except IOError:
-            logging.exception(f'Secrets target path/file not found,or unable to open,Exiting')
+            logging.exception(
+                'Secrets target path/file not found,or unable to open,Exiting')
             raise SystemExit(1)
         except Exception as err:
             logging.exception(f'Error Writing Secrets :: {err}')
