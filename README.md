@@ -16,7 +16,7 @@ Vault-kubernetes-initcontainer runs as an Init Container to do below stuff,
 - `VAULT_ROLE`	      : Vault role that Application can assume for authentication.
 - `VAULT_SECRET_PATH` : Path in Vault form where secrets have to be fetched
 - `VAULT_SKIP_VERIFY` : To skip SSL validation while connecting to Vault. (Boolean : True/False) Certs will be taken from /etc/tls/ca.crt if set to True 
-- `VAULT_K8S_ENDPOINT`: Path where Kubernetes auth method is enabled (ex : crs-kubernetes-stage-cluster) . Helps when 1 vault is connected to multiple k8s clusters. If no value is passed ,it is be set to default k8s auth path "kubernetes".
+- `VAULT_K8S_ENDPOINT`: Path where Kubernetes auth method is enabled (ex : kubernetes-stage-cluster) . Helps when 1 vault is connected to multiple k8s clusters. If no value is passed ,it is be set to default k8s auth path "kubernetes".
 - `SECRET_TARGET_PATH`:	Path in Pod Volumes where secrets have to stored
 - `SECRET_TARGET_FILE`:	Name of the file to store secret in above location
 - `SECRET_TYPE`	      : {file / Variables} Indicates whether secrets in Vault is a file or individual Variables
